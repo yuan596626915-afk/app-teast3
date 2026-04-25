@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>局域网工程监控测试终端</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="manifest" href="./manifest.json" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">局域网测试 / 电脑代理服务</p>
+            <h1>局域网工程监控与人工决策测试终端</h1>
+          </div>
+          <div class="topbar-actions">
+            <span class="status-pill offline" id="serverStatus">未连接</span>
+            <button class="secondary-button" id="connectButton" type="button">连接电脑</button>
+          </div>
+        </header>
+
+        <section class="panel config-panel" aria-label="局域网电脑连接配置">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">连接配置</p>
+              <h2>同一局域网内的测试电脑</h2>
+            </div>
+            <span class="hint" id="connectionHint">等待电脑代理地址</span>
+          </div>
+
+          <div class="field-grid">
+            <label class="field field-wide">
+              <span>电脑代理地址</span>
+              <input id="serverBase" placeholder="http://192.168.1.100:8787" />
+            </label>
+            <label class="field">
+              <span>状态接口</span>
+              <input id="statusPath" placeholder="/api/status" />
+            </label>
+            <label class="field">
+              <span>文件接口</span>
+              <input id="filesPath" placeholder="/api/files" />
+            </label>
+            <label class="field">
+              <span>决策接口</span>
+              <input id="decisionPath" placeholder="/api/decision" />
+            </label>
+            <label class="field">
+              <span>急停接口</span>
+              <input id="emergencyPath" placeholder="/api/emergency-stop" />
+            </label>
+            <label class="field field-wide">
+              <span>访问令牌（可选）</span>
+              <input id="authToken" placeholder="Bearer token / API token" />
+            </label>
+          </div>
+        </section>
+
+        <section class="safety-band" aria-label="紧急停止">
+          <div>
+            <p class="eyebrow danger-text">局域网测试急停</p>
+            <h2>紧急停止</h2>
+            <p class="band-copy">触发后向同一局域网电脑发送急停指令，由电脑代理记录并交给后续控制程序处理。</p>
+          </div>
+          <button class="emergency-button" id="emergencyButton" type="button">红色急停</button>
+        </section>
+
+        <section class="grid-layout overview-grid">
+          <section class="panel status-panel" aria-label="现场状态">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">实时监控</p>
+                <h2>局域网电脑与自动化测试状态</h2>
+              </div>
+              <span class="tag" id="lastUpdate">--</span>
+            </div>
+
+            <div class="status-grid">
+              <article class="status-item">
+                <span>连接目标</span>
+                <strong id="serverState">未连接</strong>
+              </article>
+              <article class="status-item">
+                <span>测试电脑</span>
+                <strong id="agentState">未知</strong>
+              </article>
+              <article class="status-item">
+                <span>自动化状态</span>
+                <strong id="automationState">未知</strong>
+              </article>
+              <article class="status-item">
+                <span>安全状态</span>
+                <strong id="safetyState">等待同步</strong>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel decision-panel" aria-label="人工决策">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">人工决策</p>
+              <h2>受限测试指令下发</h2>
+              </div>
+              <span class="tag" id="decisionState">等待操作</span>
+            </div>
+
+            <div class="field-grid decision-grid">
+              <label class="field">
+                <span>决策类型</span>
+                <select id="decisionType">
+                  <option value="pause">暂停测试流程</option>
+                  <option value="resume">恢复测试流程</option>
+                  <option value="set_value">写入目标数值</option>
+                  <option value="operator_note">记录人工备注</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>目标对象</span>
+                <input id="decisionTarget" placeholder="arm_extension / test.target" />
+              </label>
+              <label class="field">
+                <span>数值</span>
+                <input id="decisionValue" inputmode="decimal" placeholder="例如 120" />
+              </label>
+              <label class="field">
+                <span>单位</span>
+                <input id="decisionUnit" placeholder="mm / degree / percent" />
+              </label>
+              <label class="field field-wide">
+                <span>原因 / 备注</span>
+                <textarea id="decisionReason" rows="3" placeholder="例如：现场确认后调整伸缩目标值"></textarea>
+              </label>
+            </div>
+
+            <button class="primary-button full-button" id="sendDecisionButton" type="button">
+              下发人工决策
+            </button>
+          </section>
+        </section>
+
+        <section class="grid-layout data-grid">
+          <section class="panel files-panel" aria-label="文件日志视频">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">现场数据</p>
+                <h2>文件 / 日志 / 视频</h2>
+              </div>
+              <button class="secondary-button small-button" id="refreshFilesButton" type="button">
+                刷新
+              </button>
+            </div>
+
+            <label class="field">
+              <span>电脑代理目录</span>
+              <input id="remotePath" placeholder="/logs 或 /videos" />
+            </label>
+
+            <div class="file-list" id="fileList">
+              <div class="empty-state">等待连接局域网电脑后读取测试文件。</div>
+            </div>
+          </section>
+
+          <section class="panel detail-panel" aria-label="数据详情">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">内容预览</p>
+                <h2 id="previewTitle">未选择文件</h2>
+              </div>
+              <span class="tag" id="previewType">--</span>
+            </div>
+
+            <div class="preview-box" id="previewBox">
+              <div class="empty-state">选择文件后展示日志文本、视频地址或下载信息。</div>
+            </div>
+          </section>
+        </section>
+
+        <section class="panel protocol-panel">
+          <p class="eyebrow">局域网代理接口</p>
+          <div class="protocol-list">
+            <div class="protocol-row">
+              <code>GET /api/status</code>
+              <span>返回电脑代理、自动化测试、安全和最近更新时间。</span>
+            </div>
+            <div class="protocol-row">
+              <code>GET /api/files?path=...</code>
+              <span>返回测试目录下的日志、视频、普通文件列表。</span>
+            </div>
+            <div class="protocol-row">
+              <code>POST /api/decision</code>
+              <span>接收受限人工决策，电脑代理负责校验、写入测试文件并记录日志。</span>
+            </div>
+            <div class="protocol-row">
+              <code>POST /api/emergency-stop</code>
+              <span>局域网测试急停指令，代理会写入急停状态文件并记录日志。</span>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

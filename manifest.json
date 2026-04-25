@@ -1,0 +1,8 @@
+{
+  "name": "局域网工程监控测试终端",
+  "short_name": "局域网监控",
+  "display": "standalone",
+  "start_url": "./index.html",
+  "background_color": "#f2f5f7",
+  "theme_color": "#1769aa"
+}
